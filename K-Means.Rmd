@@ -1,0 +1,252 @@
+---
+title: "Dighton Week 10"
+author: "Aaron Dighton"
+date: "2024-08-10"
+output: pdf_document
+---
+
+# Introduction to Machine Learning
+
+In this problem, you will use the nearest neighbors algorithm to fit a model on two simplified datasets. The first dataset (found in binary-classifier-data.csv) contains three variables; label, x, and y. The label variable is either 0 or 1 and is the output we want to predict using the x and y variables (You worked with this dataset last week!). The second dataset (found in trinary-classifier-data.csv) is similar to the first dataset except that the label variable can be 0, 1, or 2.
+
+```{r}
+binary <- read.csv("binary-classifier-data.csv", header = TRUE)
+trinary <- read.csv("trinary-classifier-data.csv", header = TRUE)
+```
+
+Note that in real-world datasets, your labels are usually not numbers, but text-based descriptions of the categories (e.g. spam or ham). In practice, you will encode categorical variables into numeric values.
+Plot the data from each dataset using a scatter plot.
+
+```{r, fig.height=3, fig.width=3}
+plot(y ~ x, data = binary)
+plot(y ~ x, data = trinary)
+```
+
+The k nearest neighbors algorithm categorizes an input value by looking at the labels for the k nearest points and assigning a category based on the most common label. In this problem, you will determine which points are nearest by calculating the Euclidean distance between two points. 
+
+Fitting a model is when you use the input data to create a predictive model. There are various metrics you can use to determine how well your model fits the data. For this problem, you will focus on a single metric, accuracy. Accuracy is simply the percentage of how often the model predicts the correct result. If the model always predicts the correct result, it is 100% accurate. If the model always predicts the incorrect result, it is 0% accurate.
+
+Fit a k nearest neighbors’ model for each dataset for k=3, k=5, k=10, k=15, k=20, and k=25. Compute the accuracy of the resulting models for each value of k. Plot the results in a graph where the x-axis is the different values of k and the y-axis is the accuracy of the model.
+
+```{r}
+binary_train <- binary
+binary_test <- binary
+binary_target_category <- binary[1]
+binary_test_category <- binary[1]
+library(class)
+k3b <- knn(binary_train,binary_test,cl=binary_target_category$label,k=3)
+k5b <- knn(binary_train,binary_test,cl=binary_target_category$label,k=5)
+k10b <- knn(binary_train,binary_test,cl=binary_target_category$label,k=10)
+k15b <- knn(binary_train,binary_test,cl=binary_target_category$label,k=15)
+k20b <- knn(binary_train,binary_test,cl=binary_target_category$label,k=20)
+k25b <- knn(binary_train,binary_test,cl=binary_target_category$label,k=25)
+tabk3b <- table(k3b,binary_test_category$label)
+tabk5b <- table(k5b,binary_test_category$label)
+tabk10b <- table(k10b,binary_test_category$label)
+tabk15b <- table(k15b,binary_test_category$label)
+tabk20b <- table(k20b,binary_test_category$label)
+tabk25b <- table(k25b,binary_test_category$label)
+accuracy <- function(x){sum(diag(x)/(sum(rowSums(x)))) * 100}
+accuracy(tabk3b)
+accuracy(tabk5b)
+accuracy(tabk10b)
+accuracy(tabk15b)
+accuracy(tabk20b)
+accuracy(tabk25b)
+
+x <- c(3,5,10,15,20,25)
+y <- c(accuracy(tabk3b),accuracy(tabk5b),accuracy(tabk10b),accuracy(tabk15b),
+       accuracy(tabk20b), accuracy(tabk25b))
+```
+```{r, fig.width=3.5, fig.height=3.5}
+plot(y~x)
+```
+
+And for the trinary set.
+
+```{r}
+trinary_train <- trinary
+trinary_test <- trinary
+trinary_target_category <- trinary[1]
+trinary_test_category <- trinary[1]
+k3t <- knn(trinary_train,trinary_test,cl=trinary_target_category$label,k=3)
+k5t <- knn(trinary_train,trinary_test,cl=trinary_target_category$label,k=5)
+k10t <- knn(trinary_train,trinary_test,cl=trinary_target_category$label,k=10)
+k15t <- knn(trinary_train,trinary_test,cl=trinary_target_category$label,k=15)
+k20t <- knn(trinary_train,trinary_test,cl=trinary_target_category$label,k=20)
+k25t <- knn(trinary_train,trinary_test,cl=trinary_target_category$label,k=25)
+tabk3t <- table(k3t,trinary_test_category$label)
+tabk5t <- table(k5t,trinary_test_category$label)
+tabk10t <- table(k10t,trinary_test_category$label)
+tabk15t <- table(k15t,trinary_test_category$label)
+tabk20t <- table(k20t,trinary_test_category$label)
+tabk25t <- table(k25t,trinary_test_category$label)
+accuracy(tabk3t)
+accuracy(tabk5t)
+accuracy(tabk10t)
+accuracy(tabk15t)
+accuracy(tabk20t)
+accuracy(tabk25t)
+
+v <- c(3,5,10,15,20,25)
+w <- c(accuracy(tabk3t),accuracy(tabk5t),accuracy(tabk10t),accuracy(tabk15t),
+       accuracy(tabk20t), accuracy(tabk25t))
+```
+```{r, fig.width=3.5, fig.height=3.5}
+plot(w~v)
+```
+
+Looking back at the plots of the data, do you think a linear classifier would work well on these datasets?
+
+The binary data may work well with a linear classifier, but most likely would benefit from a different method.  The trinary dataset just looks like random noise if you were to use a linear classifier.
+
+How does the accuracy of your logistic regression classifier from last week compare?  Why is the accuracy different between these two methods?
+
+The accuracy last week was about 92%, but this week starts at a minimum of 97.66%, depending on the k used.  This matches my prediction that linear would be ok, but likely could be improved upon.
+
+# Clustering
+
+In this problem, you will use the k-means clustering algorithm to look for patterns in an unlabeled dataset. The dataset for this problem is found at data/clustering-data.csv.
+
+```{r}
+cluster <- read.csv("clustering-data.csv", header = TRUE)
+```
+Plot the dataset using a scatter plot.
+
+```{r}
+plot(y~x, data=cluster)
+```
+
+Fit the dataset using the k-means algorithm from k=2 to k=12. Create a scatter plot of the resultant clusters for each value of k.
+
+```{r}
+library(factoextra)
+library(cluster)
+
+ck2 <- kmeans(cluster, 2, 25)
+ck3 <- kmeans(cluster, 3, 25)
+ck4 <- kmeans(cluster, 4, 25)
+ck5 <- kmeans(cluster, 5, 25)
+ck6 <- kmeans(cluster, 6, 25)
+ck7 <- kmeans(cluster, 7, 25)
+ck8 <- kmeans(cluster, 8, 25)
+ck9 <- kmeans(cluster, 9, 25)
+ck10 <- kmeans(cluster, 10, 25)
+ck11 <- kmeans(cluster, 11, 25)
+ck12 <- kmeans(cluster, 12, 25)
+library(dplyr)
+```
+```{r, fig.width=3.5, fig.height=3.5}
+fviz_cluster(ck2, data = cluster)
+fviz_cluster(ck3, data = cluster)
+fviz_cluster(ck4, data = cluster)
+fviz_cluster(ck5, data = cluster)
+fviz_cluster(ck6, data = cluster)
+fviz_cluster(ck7, data = cluster)
+fviz_cluster(ck8, data = cluster)
+fviz_cluster(ck9, data = cluster)
+fviz_cluster(ck10, data = cluster)
+fviz_cluster(ck11, data = cluster)
+fviz_cluster(ck12, data = cluster)
+```
+
+As k-means is an unsupervised algorithm, you cannot compute the accuracy as there are no correct values to compare the output to. Instead, you will use the average distance from the center of each cluster as a measure of how well the model fits the data. To calculate this metric, simply compute the distance of each data point to the center of the cluster it is assigned to and take the average value of all of those distances.
+
+```{r}
+cluster12 <- data.frame(cluster[ck2$cluster==1,])
+cluster12 <- cluster12 %>% mutate(dist=sqrt((cluster12[,1] - ck2$centers[1,1])^2
+                                         + (cluster12[,2] - ck2$centers[1,2])^2))
+mean(cluster12$dist)
+```
+
+This gives the average distance for data points in the first cluster for k = 2, but I would be needing to find the average of all of the clusters, so I think I can do them both at once.
+
+```{r}
+cluster22 <- data.frame(cluster[ck2$cluster==2,])
+cluster22 <- cluster22 %>% mutate(dist=sqrt((cluster22[,1] - ck2$center[1,1])^2
+                                          + (cluster22[,2] - ck2$centers[1,2])^2))
+cluster2 <- c(cluster12$dist, cluster22$dist)
+mean(cluster2)
+```
+
+This is giving me 78.49 in the console, but different answers when run in r markdown.
+
+Calculate this average distance from the center of each cluster for each value of k and plot it as a line chart where k is the x-axis and the average distance is the y-axis.
+
+This would be incredibly long if I were to do all 11 sets of k (especially as they will get longer and longer as k increases).  I will do k=3 and k=4, and then let my imagination fill in the rest.
+
+```{r}
+cluster13 <- data.frame(cluster[ck3$cluster==1,])
+cluster13 <- cluster13 %>% mutate(dist=sqrt((cluster13[,1] - ck3$centers[1,1])^2
+                                         + (cluster13[,2] - ck3$centers[1,2])^2))
+
+cluster23 <- data.frame(cluster[ck3$cluster==2,])
+cluster23 <- cluster23 %>% mutate(dist=sqrt((cluster23[,1] - ck3$centers[1,1])^2
+                                          + (cluster23[,2] - ck3$centers[1,2])^2))
+
+cluster33 <- data.frame(cluster[ck3$cluster==3,])
+cluster33 <- cluster33 %>% mutate(dist=sqrt((cluster33[,1] - ck3$centers[1,1])^2
+                                          + (cluster33[,2] - ck3$centers[1,2])^2))
+
+cluster3 <- c(cluster13$dist, cluster23$dist, cluster33$dist)
+mean(cluster3)
+```
+
+I have no idea why, but when I calculate for k=3 in the console, I get 78.69, but different answers in the markdown file.  I have answered the following questions assuming it's 78.69.
+
+Now k=4.
+
+```{r}
+cluster14 <- data.frame(cluster[ck4$cluster==1,])
+cluster14 <- cluster14 %>% mutate(dist=sqrt((cluster14[,1] - ck4$centers[1,1])^2
+                                         + (cluster14[,2] - ck4$centers[1,2])^2))
+
+cluster24 <- data.frame(cluster[ck4$cluster==2,])
+cluster24 <- cluster24 %>% mutate(dist=sqrt((cluster24[,1] - ck4$centers[1,1])^2
+                                          + (cluster24[,2] - ck4$centers[1,2])^2))
+
+cluster34 <- data.frame(cluster[ck4$cluster==3,])
+cluster34 <- cluster34 %>% mutate(dist=sqrt((cluster34[,1] - ck4$centers[1,1])^2
+                                          + (cluster34[,2] - ck4$centers[1,2])^2))
+
+cluster44 <- data.frame(cluster[ck4$cluster==4,])
+cluster44 <- cluster44 %>% mutate(dist=sqrt((cluster44[,1] - ck4$centers[1,1])^2
+                                          + (cluster44[,2] - ck4$centers[1,2])^2))
+
+cluster4 <- c(cluster14$dist, cluster24$dist, cluster34$dist, cluster44$dist)
+mean(cluster4)
+```
+
+Similarly, k=4 gives me a mean of 135.53 in the console, but random numbers in this file.  I answered the questions as if it were 135.53.
+
+```{r}
+k <- c(2,3,4)
+dist <- c(78.49, 78.69, 135.53)
+```
+
+This should be "dist <- c(mean(cluster2), mean(cluster3), mean(cluster4))" but my markdown file is giving wrong answers.
+
+```{r}
+plot(dist~k)
+```
+
+
+One way of determining the “right” number of clusters is to look at the graph of k versus average distance and finding the “elbow point”. Looking at the graph you generated in the previous example, what is the elbow point for this dataset?
+
+The chart I made in the last section seems to show an elbow at 3 (it was relatively flat from k=2 to k=3, then jumps greatly at k=4).  As I didn't complete every value of k, I looked at some other ways to determine the right value for k.
+
+```{r}
+fviz_nbclust(cluster, kmeans, method = "wss", k.max=12)
+```
+
+This compares the k values to the total within sum of squares.  This does not give a definitive answer as we're looking for an elbow, but I would guess it is somewhere between k=2 and k=4.  There are quite a few 'elbows' in this chart, so it's hard to know for sure.
+
+Another way to check the optimal k is using k vs. the gap statistic.  
+
+```{r}
+gap <- clusGap(cluster, FUN = kmeans, nstart = 25, K.max = 12, B = 50)
+
+fviz_gap_stat(gap)
+```
+
+This shows the optimal k value is 10, where the gap statistic is highest. 
